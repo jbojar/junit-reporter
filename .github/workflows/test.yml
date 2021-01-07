@@ -1,21 +1,29 @@
-name: 'build-test'
-on: # rebuild any PRs and main branch changes
-  pull_request:
+name: 'test'
+
+on:
   push:
 
 jobs:
-  build: # make sure build/ci work properly
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          npm install
-      - run: |
-          npm run all
-  test: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+      - name: Setup node 12
+        uses: actions/setup-node@v2
+        with:
+          node-version: 12.x
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - run: npm run format-check
+      - run: npm run test
+      - name: Verify no unstaged changes
+        if: runner.os != 'windows'
+        run: __tests__/verify-no-unstaged-changes.sh
       - uses: ./
+        if: ${{ always() }}
         with:
           path: '*.xml'
