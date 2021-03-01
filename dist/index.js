@@ -213,7 +213,7 @@ const formatter = __importStar(__webpack_require__(7556));
 const matrix = __importStar(__webpack_require__(4705));
 function create(token, report) {
     return __awaiter(this, void 0, void 0, function* () {
-        const message = formatter.toMarkdown(report);
+        const formatted = formatter.toMarkdown(report);
         const name = matrix.getName('JUnit Report: ');
         const status = 'completed';
         const conclusion = report.hasTests() && report.isSuccesfull() ? 'success' : 'failure';
@@ -224,7 +224,8 @@ function create(token, report) {
             status,
             conclusion, output: {
                 title: name,
-                summary: message
+                summary: formatted.summary,
+                text: formatted.text
             } });
         core.debug(JSON.stringify(createCheckRequest, null, 2));
         const octokit = github.getOctokit(token);
@@ -291,6 +292,9 @@ function getTitle(type) {
         case 'errors': {
             return 'Errors';
         }
+        case 'successes': {
+            return 'Successful tests';
+        }
         default: {
             return 'Other';
         }
@@ -308,63 +312,64 @@ function getType(testCase) {
         return 'failures';
     }
     else {
-        return undefined;
+        return 'successes';
     }
 }
-function getMessageAboutLimit(results, count) {
-    return ((results === null || results === void 0 ? void 0 : results.length) || 0) < count ? '_Only the first ten tests has been listed below!_' : '';
-}
 function toMarkdown(report) {
-    var _a, _b, _c;
+    var _a, _b;
     if (!report.hasTests()) {
-        return '### Test results not found\n';
+        return { summary: '### Test results not found\n' };
     }
     const results = new Map();
     for (const testSuite of report.getTestSuites()) {
         for (const testCase of testSuite.testcase) {
             const type = getType(testCase);
-            if (type === undefined || (((_a = results.get(type)) === null || _a === void 0 ? void 0 : _a.length) || 0) >= 10)
-                continue;
             const name = getName(testCase);
             const message = getMessage(testCase);
-            const details = `<details>\n <summary>${name}</summary>\n\n${message}\n\n</details>`;
+            let details;
+            if (message) {
+                details = `<details>\n <summary>${name}</summary>\n\n${message}\n\n</details>`;
+            }
+            else {
+                details = `* ${name}`;
+            }
             results.set(type, (results.get(type) || []).concat(details));
         }
     }
     const tests = report.counter.tests, successful = report.counter.succesfull;
-    let result = `### Found ${tests} ${getPlural('tests', tests)}\n`;
+    let summary = `### Found ${tests} ${getPlural('tests', tests)}\n`;
     if (successful === tests) {
-        result += `\n- **All** tests were successful`;
+        summary += `\n- **All** tests were successful`;
     }
     else if (successful > 0) {
-        result += `\n- **${successful}** ${getPlural('successful', successful)} successful`;
+        summary += `\n- **${successful}** ${getPlural('successful', successful)} successful`;
     }
     else {
-        result += `\n- **None** test were successful`;
+        summary += `\n- **None** test were successful`;
     }
     if (report.hasFailures()) {
         const failures = report.counter.failures;
-        result += `\n- **${failures}** ${getPlural('failures', failures)} failed`;
+        summary += `\n- **${failures}** ${getPlural('failures', failures)} failed`;
     }
     if (report.hasErrors()) {
         const errors = report.counter.errors;
-        result += `\n- **${errors}** ${getPlural('errors', errors)} ended with error`;
+        summary += `\n- **${errors}** ${getPlural('errors', errors)} ended with error`;
     }
     if (report.hasSkipped()) {
         const skipped = report.counter.skipped;
-        result += `\n- **${skipped}** ${getPlural('skipped', skipped)} skipped`;
+        summary += `\n- **${skipped}** ${getPlural('skipped', skipped)} skipped`;
     }
+    let text = '';
     const keys = [...results.keys()].sort((a, b) => a.localeCompare(b));
     for (const key of keys) {
-        if ((((_b = results.get(key)) === null || _b === void 0 ? void 0 : _b.length) || 0) <= 0)
+        if ((((_a = results.get(key)) === null || _a === void 0 ? void 0 : _a.length) || 0) <= 0)
             continue;
-        result += `\n### ${getTitle(key)}\n`;
-        result += getMessageAboutLimit(results.get(key), report.counter.get(key));
-        result += '\n';
-        result += ((_c = results.get(key)) === null || _c === void 0 ? void 0 : _c.join('\n')) || '';
-        result += '\n';
+        text += `\n### ${getTitle(key)}\n`;
+        text += '\n';
+        text += ((_b = results.get(key)) === null || _b === void 0 ? void 0 : _b.join('\n')) || '';
+        text += '\n';
     }
-    return result;
+    return { summary, text };
 }
 exports.toMarkdown = toMarkdown;
 
