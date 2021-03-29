@@ -30,7 +30,7 @@
     "junit2json": "^2.0.2"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.19",
+    "@types/jest": "^26.0.20",
     "@types/node": "^12.12.47",
     "@typescript-eslint/parser": "^4.11.1",
     "@vercel/ncc": "^0.26.1",
