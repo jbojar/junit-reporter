@@ -443,8 +443,9 @@ function getMessage(testCase) {
         'No message provided')) === null || _k === void 0 ? void 0 : _k.split('\n').map((s) => `> ${s}`).join('\n');
 }
 function getName(testCase) {
-    const name = testCase.name.trim();
-    const classname = testCase.classname.trim();
+    var _a, _b;
+    const name = (_a = testCase.name) === null || _a === void 0 ? void 0 : _a.trim();
+    const classname = (_b = testCase.classname) === null || _b === void 0 ? void 0 : _b.trim();
     if (name.toLowerCase() === classname.toLowerCase()) {
         return `<strong>${name}</strong>`;
     }
@@ -614,7 +615,9 @@ function run() {
             const token = core.getInput('token', { required: true });
             const reportsPath = core.getInput('path', { required: true });
             const matrix = core.getInput('matrix', { required: false });
-            core.debug(JSON.stringify(matrix, null, 2));
+            if (matrix != null) {
+                core.debug(JSON.stringify(matrix, null, 2));
+            }
             const report = new Report_1.default(reportsPath);
             yield report.build();
             const checkRun = yield check.create(token, report);
