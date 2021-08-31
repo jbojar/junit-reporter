@@ -4,8 +4,10 @@ import * as formatter from './formatter';
 import * as matrix from './matrix';
 import Report from './Report';
 
+const GITHUB_SUMMARY_LIMIT = 65535;
+
 export async function create(token: string, report: Report): Promise<CheckRun> {
-  const message = formatter.toMarkdown(report);
+  const message = formatter.toMarkdown(report).substring(0, GITHUB_SUMMARY_LIMIT);
 
   const name = matrix.getName('JUnit Report');
   const status = 'completed' as const;
