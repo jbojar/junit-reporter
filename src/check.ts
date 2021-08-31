@@ -4,7 +4,7 @@ import * as formatter from './formatter';
 import * as matrix from './matrix';
 import Report from './Report';
 
-const GITHUB_SUMMARY_LIMIT = 65000;
+const GITHUB_SUMMARY_LIMIT = 50000;
 
 function truncateByBytesUTF8(str: string, limit: number): string {
   const result = new TextEncoder().encode(str).slice(0, limit);
