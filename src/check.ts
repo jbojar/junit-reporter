@@ -4,10 +4,16 @@ import * as formatter from './formatter';
 import * as matrix from './matrix';
 import Report from './Report';
 
-const GITHUB_SUMMARY_LIMIT = 65535;
+const GITHUB_SUMMARY_LIMIT = 65000;
+
+function truncateByBytesUTF8(str: string, limit: number): string {
+  const result = new TextEncoder().encode(str).slice(0, limit);
+
+  return new TextDecoder('utf-8').decode(result);
+}
 
 export async function create(token: string, report: Report): Promise<CheckRun> {
-  const message = formatter.toMarkdown(report).substring(0, GITHUB_SUMMARY_LIMIT);
+  const message = truncateByBytesUTF8(formatter.toMarkdown(report), GITHUB_SUMMARY_LIMIT);
 
   const name = matrix.getName('JUnit Report');
   const status = 'completed' as const;
@@ -26,8 +32,8 @@ export async function create(token: string, report: Report): Promise<CheckRun> {
     conclusion,
     output: {
       title: name,
-      summary: message,
-    },
+      summary: message
+    }
   };
 
   core.debug(JSON.stringify(createCheckRequest, null, 2));
