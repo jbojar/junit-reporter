@@ -26,7 +26,7 @@ jobs:
           git config --global user.email "opensource@allegro.pl"
           git config --global user.name "opensource"
           git checkout -b $VERSION
-          git add */dist -f
+          git add dist/* -f
           git commit -a -m "$VERSION release"
           git push origin $VERSION -f
         env:
