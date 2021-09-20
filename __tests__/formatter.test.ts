@@ -1,6 +1,7 @@
 import Report from '../src/Report';
 import { TestCase, TestSuite } from 'junit2json';
 import { toMarkdown } from '../src/formatter';
+import {createTestFilter} from '../src/TestFilter';
 
 const counter = jest.fn();
 jest.mock('../src/Report', () => {
@@ -11,11 +12,12 @@ jest.mock('../src/Report', () => {
 
 describe('formatter', () => {
   const report = new Report('**/*.xml');
+  const allFilter = createTestFilter('all');
 
   test('should handle empty tests results', async () => {
     report.hasTests = jest.fn(() => false);
 
-    expect(toMarkdown(report)).toEqual('# Test results not found\n');
+    expect(toMarkdown(report, allFilter)).toEqual('# Test results not found\n');
   });
 
   test('should handle successful test', async () => {
@@ -38,7 +40,7 @@ describe('formatter', () => {
     report.counter.tests = 1;
     report.counter.succesfull = 1;
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (1 test) ✓
@@ -71,7 +73,7 @@ describe('formatter', () => {
     report.counter.tests = 1;
     report.counter.succesfull = 1;
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (1 test) ✓
@@ -110,7 +112,7 @@ describe('formatter', () => {
     report.counter.succesfull = 0;
     report.counter.get = jest.fn(() => 1);
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (1 test) ✗
@@ -166,7 +168,7 @@ describe('formatter', () => {
     report.counter.failures = 1;
     report.counter.get = jest.fn(() => 1);
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (2 tests) ✗
@@ -224,7 +226,7 @@ describe('formatter', () => {
     report.counter.skipped = 1;
     report.counter.get = jest.fn(() => 1);
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (2 tests) ✗
@@ -278,7 +280,7 @@ describe('formatter', () => {
     report.counter.skipped = 1;
     report.counter.get = jest.fn(() => 1);
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (1 test) ✗
@@ -335,7 +337,7 @@ describe('formatter', () => {
     report.counter.errors = 1;
     report.counter.get = jest.fn(() => 1);
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (2 tests) ✗
@@ -433,7 +435,7 @@ describe('formatter', () => {
     report.counter.skipped = 1;
     report.counter.get = jest.fn(() => 1);
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toEqual(trimmed(`
       # Results (5 tests) ✗
@@ -583,11 +585,120 @@ describe('formatter', () => {
     report.counter.failures = 12;
     report.counter.get = jest.fn(() => 12);
 
-    const result = toMarkdown(report);
+    const result = toMarkdown(report, allFilter);
 
     expect(result).toContain(
       '_Only the first ten tests has been listed below!_'
     );
+  });
+
+  test('should show only failed test results if such filter is in use', () => {
+    //given
+    report.getTestSuites = jest.fn(() => [
+      {
+        name: 'TestSuiteWithFailures',
+        classname: 'TestSuiteWithFailuresClassName',
+        tests: 2,
+        failures: 1,
+        testcase: [
+          {
+            name: 'FailedTestCase',
+            classname: 'FailedTestCaseClassName',
+            failure: [{ message: 'Expected pi to equal 3.14 but it was 3.141' }],
+          } as TestCase,
+          {
+            name: 'SuccessfulTestCase',
+            classname: 'SuccessfulTestCaseClassName'
+          } as TestCase,
+        ]
+      } as TestSuite,
+      {
+        name: 'TestSuiteWithoutFailures',
+        classname: 'TestSuiteWithoutFailuresClassName',
+        tests: 1,
+        failures: 0,
+        testcase: [
+          {
+            name: 'AnotherSuccessfulTestCase',
+            classname: 'AnotherSuccessfulTestCaseClassName'
+          } as TestCase,
+        ]
+      },
+      {
+        name: 'TestSuiteWithErrors',
+        classname: 'TestSuiteWithErrorsClassName',
+        tests: 1,
+        errors: 1,
+        testcase: [
+          {
+            name: 'ErrorsTestCase',
+            classname: 'ErrorsTestCaseClassName',
+            error: [{message: 'Internal error'}]
+          } as TestCase,
+        ]
+      }
+    ]);
+    report.hasTests = jest.fn(() => true);
+    report.hasFailures = jest.fn(() => true);
+    report.hasErrors = jest.fn(() => false);
+    report.hasSkipped = jest.fn(() => false);
+
+    report.counter.tests = 4;
+    report.counter.succesfull = 2;
+    report.counter.failures = 1;
+    report.counter.errors = 1;
+    report.counter.get = jest.fn(() => 4);
+
+    //when
+    const result = toMarkdown(report, createTestFilter('failures'));
+
+    //then
+    expect(result).toContain('Results (4 tests)');
+
+    expect(result).toContain('TestSuiteWithFailures');
+    expect(result).toContain('FailedTestCase');
+    expect(result).toContain('ErrorsTestCase');
+    expect(result).toContain('Internal error');
+    expect(result).not.toContain('SuccessfulTestCase');
+    expect(result).not.toContain('TestSuiteWithoutFailures');
+    expect(result).not.toContain('AnotherSuccessfulTestCase');
+  });
+
+  test('should show message if all tests are filtered out', () => {
+    //given
+    report.getTestSuites = jest.fn(() => [
+      {
+        name: 'TestSuiteWithoutFailures',
+        classname: 'TestSuiteWithoutFailuresClassName',
+        tests: 1,
+        failures: 0,
+        testcase: [
+          {
+            name: 'SuccessfulTestCase',
+            classname: 'SuccessfulTestCaseClassName'
+          } as TestCase,
+        ]
+      }
+    ]);
+    report.hasTests = jest.fn(() => true);
+    report.hasFailures = jest.fn(() => false);
+    report.hasErrors = jest.fn(() => false);
+    report.hasSkipped = jest.fn(() => false);
+
+    report.counter.tests = 1;
+    report.counter.succesfull = 1;
+    report.counter.failures = 0;
+    report.counter.errors = 0;
+    report.counter.get = jest.fn(() => 1);
+
+    //when
+    const result = toMarkdown(report, createTestFilter('failures'));
+
+    //then
+    expect(result).toContain('Results (1 test)');
+    expect(result).toContain('**All** tests were successful');
+    expect(result).not.toContain('SuccessfulTestCase');
+    expect(result).not.toContain('TestSuiteWithoutFailures');
   });
 });
 

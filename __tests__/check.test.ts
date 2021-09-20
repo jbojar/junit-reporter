@@ -2,6 +2,7 @@ import nock from 'nock';
 import Report from '../src/Report';
 import { TestCase, TestSuite } from 'junit2json';
 import { matches } from 'lodash';
+import {createTestFilter} from '../src/TestFilter';
 
 describe('check', () => {
   const OLD_ENV = process.env;
@@ -68,7 +69,7 @@ describe('check', () => {
 
     const check = await import('../src/check');
 
-    await check.create('t0k3n', report);
+    await check.create('t0k3n', report, createTestFilter('all'));
 
     scope.done();
   });

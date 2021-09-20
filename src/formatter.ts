@@ -2,6 +2,7 @@ import { TestCase } from 'junit2json';
 import Report from './Report';
 import { forEachTestCase } from './suites';
 import { markdownTable } from './markdown-table';
+import {TestFilter} from './TestFilter';
 
 function getMessage(testCase: TestCase): string | undefined {
   return (
@@ -89,24 +90,27 @@ function getMessageAboutLimit(
     : '';
 }
 
-export function toMarkdown(report: Report): string {
+export function toMarkdown(report: Report, filter: TestFilter): string {
   if (!report.hasTests()) {
     return '# Test results not found\n';
   }
 
   const results: Map<string, string[]> = new Map();
 
-  forEachTestCase(report.getTestSuites(), (testCase) => {
+  const suites = report.getTestSuites().filter(suite => filter.shouldReportTestSuite(suite));
+
+  forEachTestCase(suites, (testCase) => {
     const type = getType(testCase);
     if (type === undefined || (results.get(type)?.length || 0) >= 10)
       return;
+    if (filter.shouldReportTestCase(testCase)) {
+      const name = getName(testCase);
+      const message = getMessage(testCase);
 
-    const name = getName(testCase);
-    const message = getMessage(testCase);
+      const details = `<details>\n<summary>${name}</summary>\n\n${message}\n\n</details>`;
 
-    const details = `<details>\n<summary>${name}</summary>\n\n${message}\n\n</details>`;
-
-    results.set(type, (results.get(type) || []).concat(details));
+      results.set(type, (results.get(type) || []).concat(details));
+    }
   });
 
   const tests = report.counter.tests,
@@ -114,10 +118,12 @@ export function toMarkdown(report: Report): string {
 
   let result = `# Results (${tests} ${getPlural('tests', tests)}) ${successful === tests ? '✓' : '✗'}\n`;
 
-  report.getTestSuites().forEach((suite) => {
+  suites.forEach((suite) => {
     result += `\n## ${suite.name}\n\n`;
     const testCases = suite.testcase || [];
-    const rows = testCases.map(it => [`${it.name}`, `${it.failure || it.error ? '×' : it.skipped ? '💔' : '✓'}`, `${(it.time || 0) * 1000} ms`]);
+    const rows = testCases
+        .filter(testCase => filter.shouldReportTestCase(testCase))
+        .map(it => [`${it.name}`, `${it.failure || it.error ? '×' : it.skipped ? '💔' : '✓'}`, `${(it.time || 0) * 1000} ms`]);
     const tableHeader = ['Test case', 'Result', 'Duration'];
     result += markdownTable([tableHeader].concat(rows), {align: ['l', 'c', 'c']});
     result += '\n';

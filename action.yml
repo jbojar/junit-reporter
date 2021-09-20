@@ -27,6 +27,10 @@ inputs:
     description: 'Used to fetch external configuration. Put empty string to disable.'
     required: false
     default: 'https://c.allegrogroup.com/qyn1owR'
+  show:
+    description: 'Which tests should be displayed in report. Valid inputs are: "all", "failures", "failures-and-skipped"'
+    required: false
+    default: 'all'
 runs:
   using: 'node12'
   main: 'dist/index.js'

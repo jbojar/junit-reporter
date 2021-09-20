@@ -3,6 +3,7 @@ import * as core from '@actions/core';
 import * as formatter from './formatter';
 import * as matrix from './matrix';
 import Report from './Report';
+import {TestFilter} from './TestFilter';
 
 const GITHUB_SUMMARY_LIMIT = 50000;
 
@@ -12,8 +13,8 @@ function truncateByBytesUTF8(str: string, limit: number): string {
   return new TextDecoder('utf-8').decode(result);
 }
 
-export async function create(token: string, report: Report): Promise<CheckRun> {
-  const message = truncateByBytesUTF8(formatter.toMarkdown(report), GITHUB_SUMMARY_LIMIT);
+export async function create(token: string, report: Report, filter: TestFilter): Promise<CheckRun> {
+  const message = truncateByBytesUTF8(formatter.toMarkdown(report, filter), GITHUB_SUMMARY_LIMIT);
 
   const name = matrix.getName('JUnit Report');
   const status = 'completed' as const;

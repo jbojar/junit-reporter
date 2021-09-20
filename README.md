@@ -14,4 +14,8 @@ Report JUnit test results as annotations on Github Pull Request and collect them
     # JUnit XML report path in glob format
     # Default: '**/TEST-*.xml'
     path: '**/test-results/*/*.xml'
+    # Which test results should be included in output.
+    # Options: 'all', 'failures', 'failures-and-skipped'.
+    # Default: 'all'.
+    show: 'all'
 ```
