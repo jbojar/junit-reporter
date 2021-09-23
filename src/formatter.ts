@@ -86,7 +86,7 @@ function getMessageAboutLimit(
   count: number
 ): string {
   return (results?.length || 0) < count
-    ? '_Only the first ten tests has been listed below!_'
+    ? '_Only the first ten tests have been listed below!_'
     : '';
 }
 
@@ -137,7 +137,7 @@ export function toMarkdown(report: Report, filter: TestFilter): string {
       successful
     )} successful`;
   } else {
-    result += '\n- **None** test were successful';
+    result += '\n- **No** test were successful';
   }
 
   if (report.hasFailures()) {

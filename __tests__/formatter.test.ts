@@ -123,7 +123,7 @@ describe('formatter', () => {
       | :-------- | :----: | :------: |
       | undefined |    ×   |   0 ms   |
       
-      - **None** test were successful
+      - **No** test were successful
       
       ## Failed tests
       
@@ -291,7 +291,7 @@ describe('formatter', () => {
       | :--------------- | :----: | :------: |
       | Skipped TestCase |   💔   |   0 ms   |
       
-      - **None** test were successful
+      - **No** test were successful
       - **1** test is skipped
       
       ## Skipped tests
@@ -588,7 +588,7 @@ describe('formatter', () => {
     const result = toMarkdown(report, allFilter);
 
     expect(result).toContain(
-      '_Only the first ten tests has been listed below!_'
+      '_Only the first ten tests have been listed below!_'
     );
   });
 

@@ -7,7 +7,7 @@ Report JUnit test results as annotations on Github Pull Request and collect them
 <!-- start usage -->
 ```yaml
 - uses: allegro-actions/junit-reporter@v1
-  # Execute action if previous job fails or succeeds, otherwise it won't report failurs
+  # Execute action if previous job fails or succeeds, otherwise it won't report failures
   # Default for workflows is success()
   if: ${{ success() || failure() }}
   with:
