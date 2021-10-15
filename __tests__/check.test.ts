@@ -9,15 +9,7 @@ describe('check', () => {
 
   const report = new Report('**/TEST-*.xml');
 
-  afterEach(() => {
-    nock.cleanAll();
-    process.env = OLD_ENV;
-  });
-
-  test('should send check for given report', async () => {
-    process.env['GITHUB_REPOSITORY'] = 'foo/bar';
-    process.env['GITHUB_JOB'] = 'build';
-
+  beforeEach(() => {
     report.getTestSuites = jest.fn(() => [
       {
         name: 'TestSuite',
@@ -48,6 +40,16 @@ describe('check', () => {
     report.counter.succesfull = 1;
     report.counter.skipped = 1;
     report.counter.get = jest.fn(() => 1);
+  });
+
+  afterEach(() => {
+    nock.cleanAll();
+    process.env = OLD_ENV;
+  });
+
+  test('should send check for given report', async () => {
+    process.env['GITHUB_REPOSITORY'] = 'foo/bar';
+    process.env['GITHUB_JOB'] = 'build';
 
     const scope = nock('https://api.github.com')
       .persist()
@@ -64,6 +66,27 @@ describe('check', () => {
             }
           }
         )
+      )
+      .reply(200);
+
+    const check = await import('../src/check');
+
+    await check.create('t0k3n', report, createTestFilter('all'));
+
+    scope.done();
+  });
+
+  test('should send check with name given from action input', async () => {
+    process.env['GITHUB_REPOSITORY'] = 'foo/bar';
+    process.env['INPUT_CHECK-NAME'] = 'Custom check name';
+
+    const scope = nock('https://api.github.com')
+      .persist()
+      .post(
+        '/repos/foo/bar/check-runs',
+        matches({
+          name: 'Custom check name',
+        })
       )
       .reply(200);
 
