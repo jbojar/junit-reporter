@@ -16,7 +16,7 @@ function truncateByBytesUTF8(str: string, limit: number): string {
 export async function create(token: string, report: Report, filter: TestFilter): Promise<CheckRun> {
   const message = truncateByBytesUTF8(formatter.toMarkdown(report, filter), GITHUB_SUMMARY_LIMIT);
 
-  const name = matrix.getName('JUnit Report');
+  const name = core.getInput('check-name', { required: false }) || matrix.getName('JUnit Report');
   const status = 'completed' as const;
   const conclusion =
     report.hasTests() && report.isSuccesfull()

@@ -31,6 +31,10 @@ inputs:
     description: 'Which tests should be displayed in report. Valid inputs are: "all", "failures", "failures-and-skipped"'
     required: false
     default: 'all'
+  check-name:
+    description: 'Check run name. If not defined, "JUnit Report: { github.context.job } + { Matrix context }" will be used'
+    required: false
+    default: ''
 runs:
   using: 'node12'
   main: 'dist/index.js'
