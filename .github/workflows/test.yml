@@ -28,3 +28,8 @@ jobs:
         if: ${{ always() }}
         with:
           path: '*.xml'
+      - uses: ./
+        if: ${{ always() }}
+        with:
+          path: '*.xml'
+          check-name: JUnit${{':'}} custom name test (${{ matrix.operating-system }})
