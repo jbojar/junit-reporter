@@ -14,18 +14,18 @@ function getContext(): string {
   const matrix = getMatrix();
   const os = matrix ? matrix['os'] || matrix['operating-system'] || '' : '';
 
-  let parts = []
+  const parts = [];
   if (os != '') {
-    parts.push(os)
+    parts.push(os);
   }
   if (matrix) {
-    for (let k in matrix) {
+    for (const k in matrix) {
       if (k != 'os' && k != 'operating-system') {
         parts.push(`${k}: ${matrix[k]}`);
       }
     }
   }
-  const context = parts.join(', ')
+  const context = parts.join(', ');
 
   if (job && context != '') return `${job} (${context})`;
   else return job;
