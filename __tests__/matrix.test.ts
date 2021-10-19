@@ -43,4 +43,14 @@ describe('Matrix', () => {
 
     expect(matrix.getName()).toEqual('build (node: 12)');
   });
+
+  it('should return base name with os, node, python-version', () => {
+    github.context.job = 'build';
+    mocked(core).getInput.mockReturnValueOnce(
+      '{"node": 12, "os": "ubuntu-latest", "python-version": "3.8"}'
+    );
+
+    expect(matrix.getName()).toEqual('build (ubuntu-latest, node: 12, python-version: 3.8)');
+  });
+
 });
