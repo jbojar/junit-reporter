@@ -13,11 +13,21 @@ function getContext(): string {
   const job = github.context.job || '';
   const matrix = getMatrix();
   const os = matrix ? matrix['os'] || matrix['operating-system'] || '' : '';
-  const node = matrix ? matrix['node'] || '' : '';
 
-  if (job && os && node) return `${job} (${os}, node: ${node})`;
-  else if (job && os) return `${job} (${os})`;
-  else if (job && node) return `${job} (node: ${node})`;
+  let parts = []
+  if (os != '') {
+    parts.push(os)
+  }
+  if (matrix) {
+    for (let k in matrix) {
+      if (k != 'os' && k != 'operating-system') {
+        parts.push(`${k}: ${matrix[k]}`);
+      }
+    }
+  }
+  const context = parts.join(', ')
+
+  if (job && context != '') return `${job} (${context})`;
   else return job;
 }
 
